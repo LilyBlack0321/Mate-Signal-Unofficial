@@ -1,0 +1,87 @@
+MateSignal — Unofficial Port
+=============================
+
+This is NOT an official MateEngine or MateSignal release.
+It is an unofficial, non-commercial port of MateSignal to additional
+Minecraft / mod-loader versions.
+
+It is not affiliated with, endorsed by, or supported by the MateEngine
+project or the original MateSignal author.
+
+
+WHAT THIS IS
+------------
+
+An unofficial port of MateSignal adding support for:
+
+  - Minecraft 1.20.1 / Forge
+  - Minecraft 1.21.1 / NeoForge
+  - Minecraft 1.12.2 / Forge
+
+MateSignal is a client-side bridge between Minecraft and MateEngine, a 3D
+desktop avatar application. It reports in-game moments (day/night, nearby
+mobs, low health or hunger, crafting, death, weather, sleeping and more) to
+MateEngine over local UDP so the avatar can react.
+
+
+UPSTREAM SOURCES
+----------------
+
+  MateEffect / MateEngine (the application this mod talks to)
+    Author : Johnson Jason / Shiny
+    Source : https://github.com/shinyflvre/Mate-Engine
+
+  MateSignal (the original Forge mod)
+    Author : Shiny
+    Source : https://github.com/shinyflvre/Mate-Signal
+
+  Mate-Signal-Fabric (third-party Fabric port, used as a reference)
+    Author : VeridonNetzwerk
+    Source : https://github.com/VeridonNetzwerk/Mate-Signal-Fabric
+
+
+CODE ORIGIN
+-----------
+
+The Java sources in this port were written independently for each Minecraft
+version; no source files were copied from the upstream repositories. Event
+semantics and the UDP wire protocol were derived from observing the official
+released jar, and every API call was written against that version's official
+Mojang / MCP mappings.
+
+The only upstream asset included is the mod icon (pack.png), taken from the
+MateSignal repository.
+
+
+LICENSE
+-------
+
+Distributed under the MateEngine Pro License (v2.0). The full text is
+included in this jar as LICENSE.md.
+
+In accordance with that license:
+
+  - This port is provided FREE OF CHARGE. It is not sold, and no payment or
+    donation is required to download or use it.
+  - The complete source code is publicly available; see the project page for
+    the repository link. (Section 2 / 4)
+  - Attribution to the original authors is preserved. (Section 3)
+  - This notice states that it is a modification, and the license is
+    retained. (Section 4)
+  - It is not represented as officially affiliated with or endorsed by the
+    MateEngine project. (Sections 2A / 5)
+
+
+USAGE WARNING
+-------------
+
+Do NOT use this mod on public or competitive servers. The avatar may announce
+things such as "there is a creeper behind you", which can be considered
+cheating on some servers. Use it only in singleplayer or on private servers
+with friends.
+
+
+NO WARRANTY
+-----------
+
+Provided "as is", without warranty of any kind. See LICENSE.md, Section 7.

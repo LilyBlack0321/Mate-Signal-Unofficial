@@ -1,0 +1,33 @@
+# Build artifacts
+*.class
+build/
+.gradle/
+out/
+dist/
+.gradle-user-home/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+
+# Gradle wrapper (the workspace builds with a system Gradle; see README)
+.gradle-cache/
+
+# Machine-specific Gradle overrides (proxy, certificate checks, ...).
+# Commit the .example, never your own copy.
+gradle.properties.local
+
+# Sources rendered from common/ by the prepareShared build task.
+# These are build output; common/src/main is the single copy that is tracked.
+common/build/
+
+# Local run directories produced by the dev environment
+run/
+runs/
+logs/
+
+# OS
+Thumbs.db
+.DS_Store

@@ -1,0 +1,87 @@
+// MateSignal - Minecraft 1.12.2 / Forge 14.23.5.2860
+//
+// Matches the official Forge 1.12.2 MDK:
+//   - ForgeGradle 3.+ with the `net.minecraftforge.gradle` plugin
+//   - the special `minecraft 'net.minecraftforge:forge:<mc>-<forge>'` dependency
+//   - Gradle 4.x + a Java 8 toolchain (see build-all.ps1)
+buildscript {
+    repositories {
+        maven { url = 'https://maven.minecraftforge.net/' }
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'net.minecraftforge.gradle:ForgeGradle:3.+'
+    }
+}
+
+apply plugin: 'net.minecraftforge.gradle'
+apply plugin: 'eclipse'
+
+version = "${mod_version}-${minecraft_version}"
+group = mod_group_id
+archivesBaseName = "${mod_id}-forge-${minecraft_version}"
+
+sourceCompatibility = targetCompatibility = '1.8'
+
+minecraft {
+    mappings channel: 'snapshot', version: '20171003-1.12'
+
+    runs {
+        client {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+            property 'forge.logging.console.level', 'debug'
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        name = 'MinecraftLibraries'
+        url = 'https://libraries.minecraft.net/'
+    }
+}
+
+dependencies {
+    // ForgeGradle applies its patches and MCP mappings to this userdev artifact.
+    minecraft 'net.minecraftforge:forge:1.12.2-14.23.5.2860'
+}
+
+processResources {
+    inputs.property 'version', project.version
+    inputs.property 'mcversion', project.minecraft_version
+
+    from(sourceSets.main.resources.srcDirs) {
+        include 'mcmod.info'
+        expand 'version': project.version,
+               'mcversion': project.minecraft_version,
+               'mod_id': mod_id,
+               'mod_name': mod_name,
+               'mod_description': mod_description,
+               'mod_license': mod_license,
+               'mod_credits': mod_credits
+    }
+    from(sourceSets.main.resources.srcDirs) {
+        exclude 'mcmod.info'
+    }
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+jar {
+    manifest {
+        attributes([
+                'Specification-Title'   : mod_id,
+                'Specification-Vendor'  : mod_authors,
+                'Specification-Version' : '1',
+                'Implementation-Title'  : project.name,
+                'Implementation-Version': project.version,
+                'Implementation-Vendor' : mod_authors,
+        ])
+    }
+}
+
+jar.finalizedBy('reobfJar')

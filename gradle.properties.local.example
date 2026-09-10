@@ -1,0 +1,49 @@
+# Template for a machine-local Gradle override file. Not tracked by git.
+#
+# The gradle.properties committed in each version directory is written for an
+# ordinary developer machine: it contains no proxy configuration, because a proxy
+# is a property of your network, not of this mod.
+#
+# To use it, copy this file to
+#
+#     versions\v1_20_1\gradle.properties.local
+#     versions\v1_21_1\gradle.properties.local
+#     versions\v1_12_2\gradle.properties.local
+#
+# (only the ports you build), delete the leading '#', and run
+# tools\build-all.ps1. It reads the `systemProp.*` lines from the file next to the
+# port it is building and passes them to the Gradle JVM as -D options.
+#
+# The values below are what a sandboxed build environment needed: one that cannot
+# open outbound TLS directly and must route HTTP through a local proxy. They are
+# recorded so that such an environment stays reproducible.
+#
+# If you build with `gradlew build` directly instead of build-all.ps1, this file
+# is not read - pass the same options yourself, e.g.
+#
+#     .\gradlew build "-Dhttp.proxyHost=127.0.0.1" "-Dhttp.proxyPort=8080"
+
+# --- HTTP proxy ---------------------------------------------------------------
+systemProp.http.proxyHost=127.0.0.1
+systemProp.http.proxyPort=8080
+systemProp.https.proxyHost=127.0.0.1
+systemProp.https.proxyPort=8080
+systemProp.http.nonProxyHosts=localhost|127.0.0.1
+
+# --- ForgeGradle certificate probe -------------------------------------------
+# ForgeGradle validates a TLS certificate against maven.minecraftforge.net on
+# every run. Behind a TLS-terminating proxy that check fails intermittently with
+# "Failed to validate certificate" and aborts the build before compilation.
+# Dependency downloads keep their own checksum verification either way.
+#
+# The property name differs by ForgeGradle generation - note "check" vs "test".
+# Keep only the line that matches the port you are building; a property the
+# running ForgeGradle does not know is ignored, but leaving both is only noise.
+# (tools\build-all.ps1 filters to your port automatically if you name the file
+# per port, but the file itself is shared if you copy this one verbatim.)
+systemProp.net.minecraftforge.gradle.check.certs=false   # 1.20.1 (ForgeGradle 6)
+systemProp.net.minecraftforge.gradle.test_certs=false    # 1.12.2 (ForgeGradle 3)
+
+# --- File watching ------------------------------------------------------------
+# Some sandboxes cannot create the native file-watcher; polling still works.
+# org.gradle.vfs.watch=false

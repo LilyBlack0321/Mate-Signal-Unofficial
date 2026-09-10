@@ -1,0 +1,146 @@
+plugins {
+    id 'java-library'
+    id 'net.neoforged.moddev' version '1.0.24'
+}
+
+version = "${mod_version}-${minecraft_version}"
+group = mod_group_id
+base { archivesName = "${mod_id}-neoforge-${minecraft_version}" }
+
+// Shares its Java sources with the 1.20.1 Forge port. common/ holds the single
+// tracked copy, carrying //#if <version> / //#else / //#endif markers on the
+// handful of lines that genuinely differ; prepareShared renders it for 1.21.1 at
+// the start of every build. See versions/v1_20_1/build.gradle for the rationale.
+def sharedGeneratedDir = layout.buildDirectory.dir('generated/shared')
+
+sourceSets {
+    main {
+        java {
+            srcDir sharedGeneratedDir.map { it.dir('java') }
+        }
+        resources {
+            srcDir sharedGeneratedDir.map { it.dir('resources') }
+        }
+    }
+}
+
+// Renders common/src/main for 1.21.1. PrepareShared.java is plain Java with no
+// dependencies on Minecraft or on Gradle, so one javac call compiles it and one
+// java call runs it. The two ports render into their own build directories, so
+// they never fight over a shared output folder.
+//
+// Note on paths: this project's rootDir is versions/v1_21_1, so the repository
+// root is two levels up. `rootProject.file(...)` would NOT work here - it
+// resolves against this project's directory, not against the repository root.
+def repoRoot = project.rootDir.parentFile.parentFile
+def sharedOutput = sharedGeneratedDir
+
+tasks.register('prepareShared') {
+    group = 'matesignal'
+    description = 'Renders the shared sources in common/ for Minecraft 1.21.1.'
+
+    def renderer = new File(repoRoot, 'common/tools/PrepareShared.java')
+    def sharedSrc = new File(repoRoot, 'common/src/main')
+    def rendererClasses = layout.buildDirectory.dir('renderer-classes')
+
+    inputs.file(renderer)
+    inputs.dir(sharedSrc)
+    outputs.dir(sharedOutput)
+
+    doLast {
+        def launch = project.javaToolchains.launcherFor {
+            languageVersion = JavaLanguageVersion.of(21)
+        }.get()
+        def javac = launch.metadata.installationPath.file('bin/javac').asFile.absolutePath
+        def java = launch.metadata.installationPath.file('bin/java').asFile.absolutePath
+
+        def classesDir = rendererClasses.get().asFile
+        delete(classesDir)
+        classesDir.mkdirs()
+        exec { commandLine javac, '-encoding', 'UTF-8', '-d', classesDir, renderer.absolutePath }
+
+        def target = sharedOutput.get().asFile
+        delete(target)
+        target.mkdirs()
+        exec {
+            commandLine java, '-cp', classesDir.absolutePath,
+                    'PrepareShared', '1.21.1', sharedSrc.absolutePath, target.absolutePath
+        }
+
+        ['java/me/shiny/matesignal/MateSignal.java', 'resources/LICENSE.md'].each { rel ->
+            if (!new File(target, rel).isFile()) {
+                throw new GradleException("prepareShared did not produce ${rel}")
+            }
+        }
+    }
+}
+
+tasks.named('compileJava') { dependsOn 'prepareShared' }
+tasks.named('processResources') { dependsOn 'prepareShared' }
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+neoForge {
+    version = project.neoforge_version
+
+    // The mod touches client-only classes (GuiGraphics, CycleButton, ...), so the
+    // dev runs must be client runs.
+    runs {
+        client {
+            client()
+        }
+    }
+
+    mods {
+        "${mod_id}" {
+            sourceSet sourceSets.main
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 21
+}
+
+tasks.named('processResources', ProcessResources).configure {
+    var replaceProperties = [
+            minecraft_version       : minecraft_version,
+            minecraft_version_range : minecraft_version_range,
+            neoforge_version        : neoforge_version,
+            neoforge_version_range  : neoforge_version_range,
+            loader_version_range    : loader_version_range,
+            mod_id                  : mod_id,
+            mod_name                : mod_name,
+            mod_license             : mod_license,
+            mod_version             : mod_version,
+            mod_authors             : mod_authors,
+            mod_credits             : mod_credits,
+            mod_description         : mod_description,
+    ]
+    inputs.properties replaceProperties
+    filesMatching(['META-INF/neoforge.mods.toml', 'pack.mcmeta']) {
+        expand replaceProperties + [project: project]
+    }
+}
+
+tasks.named('jar', Jar).configure {
+    manifest {
+        attributes([
+                'Specification-Title'   : mod_id,
+                'Specification-Vendor'  : mod_authors,
+                'Specification-Version' : '1',
+                'Implementation-Title'  : project.name,
+                'Implementation-Version': project.jar.archiveVersion,
+                'Implementation-Vendor' : mod_authors,
+        ])
+    }
+}
