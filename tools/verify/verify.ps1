@@ -410,6 +410,7 @@ Write-Host ''
 Write-Host '=== license compliance ===' -ForegroundColor Cyan
 $licenseExit = 0
 $unresolved = @()
+$staleUrl = @()
 foreach ($jar in $jars) {
     $tmp = Join-Path $env:TEMP ("ms-lic-" + [guid]::NewGuid().ToString('N'))
     New-Item -ItemType Directory -Force -Path $tmp | Out-Null
@@ -438,12 +439,34 @@ foreach ($jar in $jars) {
         $unresolved += $jar.Name
     }
 
-    if ($hasLicenseText -and $hasCredits -and $licenseOk -and $noMit -and $attribution -and $unofficial) {
+    # The link must also be the *current* one. Checking only for the placeholder
+    # let a stale URL ship: the repository was renamed after the first build, the
+    # metadata was corrected, but processResources was still up to date and the
+    # jar kept the old address. So the URL is now compared against the one the
+    # source tree declares.
+    $declaredUrl = $null
+    foreach ($prop in @('..\..\versions\v1_20_1\gradle.properties',
+                        '..\..\versions\v1_21_1\gradle.properties',
+                        '..\..\versions\v1_12_2\gradle.properties')) {
+        $p = Join-Path $here $prop
+        if (-not (Test-Path $p)) { continue }
+        $line = Select-String -Path $p -Pattern '^mod_description=.*?(https://\S+)' |
+                Select-Object -First 1
+        if ($line) { $declaredUrl = $line.Matches[0].Groups[1].Value; break }
+    }
+    $urlOk = $true
+    if ($declaredUrl) {
+        $urlOk = $metaText.Contains($declaredUrl)
+        if (-not $urlOk) { $staleUrl += "$($jar.Name) (expected $declaredUrl)" }
+    }
+
+    if ($hasLicenseText -and $hasCredits -and $licenseOk -and $noMit -and $attribution `
+            -and $unofficial -and $urlOk) {
         Write-Host ("  ok   {0}" -f $jar.Name)
     } else {
         $licenseExit = 1
-        Write-Host ("  FAIL {0} licenseText={1} credits={2} licenseOk={3} noMIT={4} attribution={5} unofficial={6}" `
-            -f $jar.Name, $hasLicenseText, $hasCredits, $licenseOk, $noMit, $attribution, $unofficial) -ForegroundColor Red
+        Write-Host ("  FAIL {0} licenseText={1} credits={2} licenseOk={3} noMIT={4} attribution={5} unofficial={6} urlOk={7}" `
+            -f $jar.Name, $hasLicenseText, $hasCredits, $licenseOk, $noMit, $attribution, $unofficial, $urlOk) -ForegroundColor Red
     }
     Remove-Item -Recurse -Force $tmp -ErrorAction SilentlyContinue
 }
@@ -455,6 +478,14 @@ if ($unresolved.Count -gt 0) {
     Write-Host '        MateEngine Pro License v2.0 section 4 requires the complete source' -ForegroundColor Yellow
     Write-Host '        to be published and linked before distributing the mod.' -ForegroundColor Yellow
     Write-Host '        Set mod_description / mcmod.info url, then rebuild.' -ForegroundColor Yellow
+}
+
+if ($staleUrl.Count -gt 0) {
+    Write-Host ''
+    Write-Host '  NOTE: these jars carry an outdated source URL:' -ForegroundColor Yellow
+    foreach ($s in $staleUrl) { Write-Host "        $s" -ForegroundColor Yellow }
+    Write-Host '        gradle.properties was edited after the last resource processing,' -ForegroundColor Yellow
+    Write-Host '        so the jar still has the previous address. Rebuild that port.' -ForegroundColor Yellow
 }
 
 Write-Host ''
