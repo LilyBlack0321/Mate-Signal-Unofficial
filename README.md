@@ -147,13 +147,24 @@ the verification procedure are documented in [README-DEV.md](README-DEV.md).
 
 ## Screenshots
 
-![Avatar speech bubble](screenshots/01-bubble.png)
+Avatar messages follow the language selected in Minecraft. Both sets below are from
+the same build.
 
-![Nightfall message](screenshots/02-night.png)
+**English**
 
-![Nearby mob warning](screenshots/03-mob.png)
+![Cherry grove](screenshots/01-cherry-grove.jpg)
 
-![Crafting finished](screenshots/04-craft.png)
+*Biome discovery — the biome name is resolved by the game, not hard-coded.*
+
+![Nearby zombie](screenshots/02-zombie.jpg)
+
+*Mob proximity.*
+
+![Drowning](screenshots/03-drowning.jpg)
+
+*Drowning.*
+
+**简体中文** — [view the Chinese screenshots](README.zh-CN.md#截图)
 
 ---
 

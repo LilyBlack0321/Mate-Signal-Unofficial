@@ -137,13 +137,23 @@ gradle build
 
 ## 截图
 
-![角色气泡](screenshots/01-bubble.png)
+角色消息跟随 Minecraft 内选择的语言。以下截图与英文版出自同一构建。
 
-![天黑提示](screenshots/02-night.png)
+**简体中文**
 
-![附近有敌对生物](screenshots/03-mob.png)
+![樱花林群系](screenshots/01-cherry-grove.zh-CN.jpg)
 
-![合成完成](screenshots/04-craft.png)
+*群系发现——群系名由游戏解析，非硬编码。*
+
+![附近有僵尸](screenshots/02-zombie.zh-CN.jpg)
+
+*敌对生物接近。*
+
+![溺水](screenshots/03-drowning.zh-CN.jpg)
+
+*溺水。*
+
+**English** — [查看英文截图](README.md#screenshots)
 
 ---
 

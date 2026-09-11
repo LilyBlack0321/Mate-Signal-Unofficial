@@ -1,26 +1,35 @@
 # 截图 / Screenshots
 
-把游戏截图放到这个目录，文件名用下面的名字，README 里就能直接显示。
+README 引用的截图。文件名与 README 中的引用一一对应，替换时保持文件名不变即可。
 
-Put your screenshots in this folder using the file names below and they will
-show up in the README as-is.
+Screenshots referenced by the README. Keep the file names unchanged when replacing.
 
-| 文件名 / File name | 建议内容 / Suggested content |
-|---|---|
-| `01-bubble.png` | 桌宠冒出气泡的样子（最能说明这个模组在做什么的一张）/ The avatar showing a speech bubble — the single most representative shot |
-| `02-night.png` | 入夜提示 / Night-time message |
-| `03-mob.png` | 附近有怪物时的提示 / Nearby-mob warning |
-| `04-craft.png` | 合成完成 / Finished crafting |
-| `05-config.png` | 配置界面 / The config screen |
-| `06-command.png` | `/matesignal list` 或 `/matesignal test` 的输出 / Output of `/matesignal list` or `/matesignal test` |
+| 文件名 / File name | 内容 / Content | 用于 / Used by |
+|---|---|---|
+| `01-cherry-grove.jpg` | 樱花林群系提示 / Cherry grove biome message | `README.md` |
+| `02-zombie.jpg` | 附近有僵尸 / Nearby zombie | `README.md` |
+| `03-drowning.jpg` | 溺水 / Drowning | `README.md` |
+| `01-cherry-grove.zh-CN.jpg` | 同上，中文 / Same, Chinese | `README.zh-CN.md` |
+| `02-zombie.zh-CN.jpg` | 同上，中文 / Same, Chinese | `README.zh-CN.md` |
+| `03-drowning.zh-CN.jpg` | 同上，中文 / Same, Chinese | `README.zh-CN.md` |
 
-## 建议
+## 说明 / Notes
 
-- PNG 格式，宽度 1280 左右就够了，太大的图 GitHub 页面加载会慢
-- 游戏内按 F2 截图，文件在 `.minecraft/screenshots/`
-- 如果气泡文字太小看不清，可以裁剪一下只保留气泡和角色
+- 中英文各一套，用于说明气泡文本跟随 Minecraft 内的语言设置。
+  Two sets, one per language, demonstrating that bubble text follows the
+  language selected in Minecraft.
+- 场景编号在两个语言中保持一致：1 = 群系，2 = 生物，3 = 溺水。
+  Scene numbering is identical across languages: 1 = biome, 2 = mob, 3 = drowning.
+- 游戏内按 F2 截图，文件位于 `.minecraft/screenshots/`。
+  In-game screenshots via F2, stored in `.minecraft/screenshots/`.
 
-## 备注
+## 重新拍摄时 / When re-shooting
 
-`01-bubble.png` 是唯一强烈建议提供的一张——读者看 README 时最先想知道的就是
-"这东西长什么样"，一张气泡图能省掉一大段文字。
+```powershell
+# 1.21.1 示例，逐条触发单个事件便于取景
+/matesignal test biome
+/matesignal test mob
+/matesignal test drowning
+```
+
+`/matesignal test all` 会排队 13 个事件、每秒一个，不适合取景。
