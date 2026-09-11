@@ -25,8 +25,7 @@
 │  ├─ build-all.ps1            一次构建三个平台
 │  └─ verify/                  12 组校验工具
 ├─ setup.ps1                   首次克隆后的环境准备
-├─ screenshots/           README 用的截图
-└─ PUSH-INSTRUCTIONS.md        发布流程
+└─ screenshots/                README 用的截图
 ```
 
 每个 `versions/*/` 下只有**该平台独有的东西**：`settings.gradle`、`build.gradle`、
