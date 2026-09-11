@@ -24,6 +24,8 @@
 #     .\gradlew build "-Dhttp.proxyHost=127.0.0.1" "-Dhttp.proxyPort=8080"
 
 # --- HTTP proxy ---------------------------------------------------------------
+# Fill in your own proxy address and port; 8080 stands in for whatever your
+# proxy actually listens on.
 systemProp.http.proxyHost=127.0.0.1
 systemProp.http.proxyPort=8080
 systemProp.https.proxyHost=127.0.0.1
