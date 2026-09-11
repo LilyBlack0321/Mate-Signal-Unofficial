@@ -39,7 +39,6 @@ $sharedSrc = Join-Path $Here 'src\main'
 $netBase   = if ($env:GRADLE_USER_HOME) { Join-Path $env:GRADLE_USER_HOME 'caches' }
              else { Join-Path $env:USERPROFILE '.gradle\caches' }
 
-
 if (-not (Test-Path $javac)) { throw "No JDK found (looked for $javac); set JAVA_HOME" }
 
 New-Item -ItemType Directory -Force -Path $buildDir | Out-Null

@@ -19,11 +19,21 @@ public class GetZhLang {
         Files.createDirectories(out);
 
         // 1.12.2 client jar from Mojang's CDN (resolved via the version manifest).
-        HttpClient c = HttpClient.newBuilder()
+        //
+        // Any proxy comes from the usual system properties so nothing is tied to
+        // one machine:
+        //   java -Dhttps.proxyHost=... -Dhttps.proxyPort=... GetZhLang <out>
+        // With no properties set this connects directly.
+        HttpClient.Builder builder = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(30))
-                .followRedirects(HttpClient.Redirect.NORMAL)
-                .connectTimeout(Duration.ofSeconds(30))
-                .build();
+                .followRedirects(HttpClient.Redirect.NORMAL);
+        String proxyHost = System.getProperty("https.proxyHost");
+        String proxyPort = System.getProperty("https.proxyPort");
+        if (proxyHost != null && !proxyHost.isEmpty() && proxyPort != null && !proxyPort.isEmpty()) {
+            builder.proxy(ProxySelector.of(new InetSocketAddress(proxyHost, Integer.parseInt(proxyPort))));
+            System.out.println("using proxy " + proxyHost + ":" + proxyPort);
+        }
+        HttpClient c = builder.build();
 
         String manifest = get(c, "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json");
         String versionUrl = findVersionUrl(manifest, "1.12.2");
