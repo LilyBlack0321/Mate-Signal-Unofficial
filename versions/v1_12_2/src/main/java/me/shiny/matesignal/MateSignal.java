@@ -310,8 +310,10 @@ public class MateSignal {
         EntityPlayerSP p = mc.player;
         World level = mc.world;
 
-        // The test command works even outside a world so the avatar can be
-        // checked straight from the main menu.
+        // The test queue is drained before the null checks below, so queued
+        // test events are still delivered when no player or world exists. This
+        // concerns the queue only: the command that fills it needs a chat
+        // screen, which the main menu does not have.
         tickTestQueue();
 
         if (p == null || level == null) {

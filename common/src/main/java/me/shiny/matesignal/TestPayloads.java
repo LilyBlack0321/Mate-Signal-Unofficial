@@ -111,8 +111,8 @@ final class TestPayloads {
 
     /**
      * Display name used for the sample entity, resolved exactly like a real
-     * proximity event. Falls back to the plain English name when no world is
-     * loaded (the command works from the main menu too).
+     * proximity event. Falls back to the plain English name when the player is
+     * not available.
      */
 //#if 1.20.1
     private static String entityName(Player player) {

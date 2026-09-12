@@ -90,8 +90,8 @@ original mod and settings are preserved when switching between them.
 | `/matesignal reload` | Reloads the biome name override table (1.12.2 only) |
 
 `/matesignal test all` verifies the connection between the mod and MateEngine. A
-sequence of avatar messages indicates a working link. A world does not need to be
-loaded; the command is available from the main menu.
+sequence of avatar messages indicates a working link. You must be in a world for
+this — chat is not reachable from the main menu.
 
 ---
 

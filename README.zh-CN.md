@@ -86,7 +86,7 @@ Minecraft 1.21.10 请使用[原模组](https://github.com/shinyflvre/Mate-Signal
 | `/matesignal reload` | 重新载入群系名覆盖表（仅 1.12.2） |
 
 `/matesignal test all` 用于验证模组与 MateEngine 之间的连接。出现连续的角色消息即表示
-链路正常。无需进入世界，主菜单即可执行。
+链路正常。需要先进入世界——主菜单没有聊天输入，无法执行命令。
 
 ---
 

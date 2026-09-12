@@ -32,49 +32,57 @@ $javac = Join-Path $jdkBin 'javac.exe'
 $jarExe = Join-Path $jdkBin 'jar.exe'
 $javap  = Join-Path $jdkBin 'javap.exe'
 
-# The Gradle caches hold the decompiled Minecraft jars that some checks need on
-# the classpath, because the mod classes reference Minecraft types in their
-# signatures. There is no single cache that serves every port: the 1.12.2 tool
-# chain is ForgeGradle 3 on Gradle 4, while 1.20.1 is ForgeGradle 6 on Gradle 8,
-# and they keep their mapped jars in separate Gradle homes.
-#
-# Resolution order per port:
-#   1. the port's environment variable (MATESIGNAL_FORGE_CACHES / _LEGACY_)
-#   2. the GRADLE_USER_HOME the build used, then the standard ~/.gradle
-#   3. any cache directory that build-all.ps1 created inside the repository
-#      (.gradle-user-home/<port>), discovered by looking for the mapped jars
+# Every port has to be resolved on its own. The three toolchains keep their
+# mapped Minecraft jars in different Gradle homes (ForgeGradle 6 on Gradle 8 for
+# 1.20.1, ModDevGradle for 1.21.1, ForgeGradle 3 on Gradle 4 for 1.12.2), and the
+# jars each port needs on the classpath differ too. So instead of picking "the
+# first cache that has any mapped jar" - which returns the wrong one for two of
+# the three ports - each port declares the jars it needs and each cache is scored
+# by how many of them it actually contains.
 $repoRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 
-# Finds Gradle "caches" directories that contain a mapped Minecraft jar. Each
-# port may use a different Gradle home, so every candidate is kept and the
-# per-port picker chooses the first that actually holds what that port needs.
-function _FindRepoCaches([string[]] $startDirs) {
+$ForegroundJars20 = @('*mapped_official*.jar', 'fmlcore-*.jar', 'fmlloader-*.jar',
+                      'eventbus-*.jar', 'core-3.6.4.jar', 'toml-3.6.4.jar', 'brigadier-*.jar')
+$ForegroundJars12 = @('*mapped*.jar')
+
+# All "caches" directories below the given roots, skipping the ones nested inside
+# modules-2 (those are artifact stores, not Gradle homes).
+function _FindCaches([string[]] $roots) {
     $found = New-Object System.Collections.ArrayList
-    foreach ($dir in $startDirs) {
-        if (-not $dir -or -not (Test-Path $dir)) { continue }
-        $hits = Get-ChildItem $dir -Directory -Recurse -ErrorAction SilentlyContinue |
-                Where-Object { $_.Name -eq 'caches' -and $_.FullName -notmatch '\\modules-2\\' } |
-                Where-Object {
-                    @(Get-ChildItem $_.FullName -Recurse -Filter '*mapped*.jar' -ErrorAction SilentlyContinue).Count -gt 0
-                }
+    foreach ($root in $roots) {
+        if (-not $root -or -not (Test-Path $root)) { continue }
+        $hits = Get-ChildItem $root -Directory -Recurse -ErrorAction SilentlyContinue |
+                Where-Object { $_.Name -eq 'caches' -and $_.FullName -notmatch '\\modules-2\\' }
         foreach ($h in $hits) { if (-not $found.Contains($h.FullName)) { [void]$found.Add($h.FullName) } }
     }
     return @($found)
 }
 
-function _PickCache([string] $envVar, [string] $preferred, [string[]] $discovered) {
+# How many of the wanted jars a cache holds. 0 means unusable.
+function _CacheScore([string] $dir, [string[]] $patterns) {
+    if (-not $dir -or -not (Test-Path $dir)) { return 0 }
+    $n = 0
+    foreach ($p in $patterns) {
+        if (@(Get-ChildItem $dir -Recurse -Filter $p -ErrorAction SilentlyContinue).Count -gt 0) { $n++ }
+    }
+    return $n
+}
+
+# The cache to use for a port: an explicit override if set, otherwise the
+# best-scoring candidate. Ties go to the default Gradle location.
+function _ResolveCache([string] $envVar, [string] $default, [string[]] $candidates, [string[]] $patterns) {
     if ((Get-Item "env:$envVar" -ErrorAction SilentlyContinue)) {
         $p = (Get-Item "env:$envVar").Value
         if ($p -and (Test-Path $p)) { return $p }
     }
-    if ($preferred -and (Test-Path $preferred)) {
-        # Only accept the default location if it really holds a mapped jar.
-        if (@(Get-ChildItem $preferred -Recurse -Filter '*mapped*.jar' -ErrorAction SilentlyContinue).Count -gt 0) {
-            return $preferred
-        }
+    $best = $null
+    $bestScore = 0
+    foreach ($c in (@($default) + @($candidates))) {
+        $s = _CacheScore $c $patterns
+        if ($s -gt $bestScore) { $bestScore = $s; $best = $c }
     }
-    foreach ($d in $discovered) { if ($d -and (Test-Path $d)) { return $d } }
-    return $preferred
+    if ($best) { return $best }
+    return $default
 }
 
 $gradleUserHome = if ($env:GRADLE_USER_HOME) { $env:GRADLE_USER_HOME }
@@ -82,9 +90,10 @@ $gradleUserHome = if ($env:GRADLE_USER_HOME) { $env:GRADLE_USER_HOME }
 
 # Look inside the repository and beside it: build-all.ps1 keeps its Gradle homes
 # under the repository, while a plain `gradle build` uses the default location.
-$repoCaches = _FindRepoCaches @($repoRoot, (Split-Path $repoRoot -Parent))
-$ForgeCaches  = _PickCache 'MATESIGNAL_FORGE_CACHES'  (Join-Path $gradleUserHome 'caches') $repoCaches
-$LegacyCaches = _PickCache 'MATESIGNAL_LEGACY_CACHES' (Join-Path $gradleUserHome 'caches') $repoCaches
+$allCaches = _FindCaches @($repoRoot, (Split-Path $repoRoot -Parent))
+$defaultCaches = Join-Path $gradleUserHome 'caches'
+$ForgeCaches  = _ResolveCache 'MATESIGNAL_FORGE_CACHES'  $defaultCaches $allCaches $ForegroundJars20
+$LegacyCaches = _ResolveCache 'MATESIGNAL_LEGACY_CACHES' $defaultCaches $allCaches $ForegroundJars12
 
 if (-not (Test-Path $javac)) {
     Write-Host "No JDK found at $jdkBin - set JAVA_HOME to a JDK 21." -ForegroundColor Red
